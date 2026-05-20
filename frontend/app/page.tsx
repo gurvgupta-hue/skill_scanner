@@ -306,7 +306,7 @@ export default function Home() {
                     boxShadow: loading || analyzing || !text.trim() ? "none" : "0 2px 8px rgba(0,112,243,0.28)",
                   }}
                 >
-                  {loading ? "⏳ Scanning…" : "🔍 Scan Payload"}
+                  {loading ? "Scanning…" : "Scan Payload"}
                 </button>
                 <button
                   className="analyze-btn"
@@ -320,7 +320,7 @@ export default function Home() {
                     boxShadow: loading || analyzing || !text.trim() ? "none" : "0 2px 8px rgba(124,58,237,0.28)",
                   }}
                 >
-                  {analyzing ? "⏳ Analyzing…" : "🤖 Analyze Threats (AI)"}
+                  {analyzing ? "Analyzing…" : "Analyze Threats"}
                 </button>
               </div>
 
@@ -553,7 +553,7 @@ export default function Home() {
                                 color: f.source === "llm" ? "#5b21b6" : "#1d4ed8",
                                 border: `1px solid ${f.source === "llm" ? "#c4b5fd" : "#bfdbfe"}`,
                               }}>
-                                {f.source === "llm" ? "🤖 AI" : "📏 Rule"}
+                                {f.source === "llm" ? "AI" : "Rule"}
                               </span>
                               <span style={{
                                 fontSize: "11px", color: "#64748b",
@@ -595,7 +595,7 @@ export default function Home() {
 
           {/* Footer */}
           <p style={{ textAlign: "center", marginTop: "16px", fontSize: "12px", color: "#94a3b8" }}>
-            ClearSight Skill Scanner · Unicode steganography + AI threat analysis
+            Skill Scanner · Unicode steganography + Threat analysis
           </p>
         </div>
       </main>
