@@ -1,0 +1,6 @@
+fastapi==0.109.2
+uvicorn==0.27.0.post1
+pydantic==2.13.4
+slowapi==0.1.9
+regex==2024.11.6
+google-genai==2.4.0

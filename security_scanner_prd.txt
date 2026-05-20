@@ -1,0 +1,100 @@
+PRODUCT REQUIREMENTS DOCUMENT (PRD)
+
+1. EXECUTIVE SUMMARY
+
+This solution will be an automated, high-performance security scanner designed to detect, 
+decode, and neutralize hidden steganographic payloads (like ASCII/Unicode smuggling) 
+within text files (.md, .html, .txt) and API streams before they are ingested by 
+Large Language Models (LLMs) or AI Agents.
+
+1.1 The Problem
+Threat actors use invisible Unicode characters (e.g., Unicode Tag Block 
+U+E0001-U+E007F, Zero-Width characters) to embed hidden instructions in plain text. 
+Human reviewers and standard AST/regex security tools do not see these characters, 
+but LLM tokenizers (while doing the tokenization specifically using Subword 
+tokenization) process them normally. This leads to severe prompt injection 
+attacks, resulting in credential theft, unauthorized tool execution, or data 
+exfiltration.
+
+1.2 The Solution
+This solution acts as a deterministic, fail-closed runtime safety gate. It intercepts 
+text payloads, flags anomalous concentrations of invisible Unicode, decodes the 
+hidden payload for security auditing, and either sanitizes the file or blocks 
+the transaction.
+
+
+2. TARGET AUDIENCE & USE CASES
+
+* DevSecOps Engineers: Integrating the scanner into CI/CD pipelines to prevent 
+  developers from merging compromised Model Context Protocol (MCP) tool 
+  descriptions or Agent Skill files.
+* AI Application Developers: Using this solution as middleware to sanitize user-
+  uploaded documents before feeding them to a Retrieval-Augmented Generation (RAG) 
+  system.
+* Red Teams/Security Researchers: Using the CLI/API to decode and analyze 
+  intercepted steganographic attacks.
+
+
+3. CORE FEATURES & DETAILED REQUIREMENTS
+
+3.1 Detection Capabilities & Mechanics
+The system must identify the following encoding taxonomies deterministically:
+- Tag Block Smuggling: Detect characters in the U+E0001-U+E007F range.
+- Zero-Width Binary: Detect U+200B (ZWSP), U+200C (ZWNJ), U+200D (ZWJ).
+- Variation Selectors: Detect U+FE00-FE0F and U+E0100-E01EF.
+- Sneaky Bits: Detect U+2062, U+2064 (invisible math operators).
+- Emoji Smuggling: Detect anomalous spikes in emoji usage combined with zero-width 
+  characters.
+- Tokenizer-Aware Heuristics: Simulate target tokenization (e.g., Tiktoken, 
+  SentencePiece) to detect payloads that only become malicious post-merge.
+- Directional Override Detection: Flag malicious use of Bidi text control 
+  characters (e.g., U+202E Right-to-Left Override) used to spoof file extensions.
+- Fragmented Payload Assembly: Maintain short-lived state across a single API 
+  request to detect payloads chunked across multiple JSON fields.
+
+3.2 Actionable Decoding (The "Reveal" Feature)
+When a smuggled payload is detected, the system must:
+- Reverse the specific encoding math (e.g., subtract 0xE0000 for Tag Blocks).
+- Output the exact hidden prompt injection string.
+- Map the decoded instruction against known Owner-Harm categories.
+
+3.3 Sanitization & Fallback Modes
+The tool must support configurable operational modes:
+1. Strict Blocking (Fail-Closed): If the threshold is breached, reject the file/request.
+2. Sanitize & Proceed: Mathematically strip all detected invisible Unicode 
+   characters, logging the event but allowing clean text to pass.
+3. Failsafe Mechanisms (Open vs. Closed): If the scanner times out (>5ms P99 latency), 
+   configurable fallback to either Fail Open (maintain availability) or 
+   Fail Closed (maintain security).
+
+3.4 Comprehensive Edge Case Management
+- Complex Script Allow-listing: Context-aware parsing. Legitimate ZWJ/ZWNJ usage 
+  in Arabic, Hebrew, and Indic scripts must be permitted if surrounded by 
+  appropriate Unicode blocks. Alerts trigger only if standalone or mixed with ASCII.
+- Emoji Modifier & Ligature Handling: Recognize and bypass standard Unicode emoji 
+  ligature sequences (e.g., Family emojis, skin tones) to prevent false positives.
+- Markdown/Rich Text Artifacts: Ignore list for known, safe structural patterns 
+  (e.g., zero-width spaces for URL breaking in standard CMS platforms).
+
+3.5 Integration Points
+- CLI Tool: Fast, single-binary executable for local developer scanning.
+- SDKs: Drop-in middleware for frameworks like LangChain or LlamaIndex.
+- Web API: RESTful endpoint with robust rate limiting, API key rotation, and payload size limits.
+
+
+4. TECHNICAL SPECIFICATIONS & ENTERPRISE REQUIREMENTS
+
+4.1 Performance
+- Goal: Processing time for a standard 100kb file must be under 5 milliseconds (P99).
+- Architecture: Deterministic regex/AST parsing; no secondary LLM calls.
+- Density Scoring Algorithm: Replaces hardcoded thresholds with a ratio of 
+  invisible to visible characters within a sliding text window (e.g., per 100 tokens).
+
+4.2 Security, Privacy, & SIEM Integration
+- Stateless Operation: Process text in memory and immediately discard it.
+- ReDoS Defense Strategy: Enforce strict regex execution timeouts (e.g., 2ms max) 
+  and fall back to linear string-matching algorithms if a timeout occurs.
+- SIEM / SOAR Integration: Emit structured telemetry (CEF/JSON) mapping decoded 
+  payloads to Owner-Harm categories to tools like Splunk or Datadog, strictly 
+  scrubbing PII from clean text.
+
